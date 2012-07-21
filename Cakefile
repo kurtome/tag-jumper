@@ -5,7 +5,7 @@ fs	 = require 'fs'
 util   = require 'util'
 uglify = require './node_modules/uglify-js'
 
-prodSrcCoffeeDir	 = 'coffee-scripts'
+prodSrcCoffeeDir	 = 'src/coffee'
 testSrcCoffeeDir	 = 'test/coffee'
 
 prodTargetJsDir	  = 'extension/scripts'
@@ -15,7 +15,7 @@ testCoffeeOpts = "--output #{testTargetJsDir}"
 
 # Order matters!
 inOutPairs = [
-	['tag-jumper-main', ['main']]
+	['tag-jumper-main', ['setup', 'main']]
 ]
 #prodCoffeeFiles = []
 #
