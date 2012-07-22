@@ -15,9 +15,9 @@ window.requestAnimFrame = do ->
 
 
 ###
- Creates wall boundaries fo the game
+ Creates a horizontal platform
 ###
-tjump.createWalls = ->
+tjump.createPlatform = (platformDef) ->
 	b2BodyDef = Box2D.Dynamics.b2BodyDef
 	b2Body = Box2D.Dynamics.b2Body
 	b2FixtureDef = Box2D.Dynamics.b2FixtureDef
@@ -25,67 +25,21 @@ tjump.createWalls = ->
 
 	fixDef = new b2FixtureDef
 	fixDef.density = 1.0
-	fixDef.friction = 0
-	fixDef.restitution = 0.2
+	fixDef.friction = 1
+	fixDef.restitution = 1
 
 	bodyDef = new b2BodyDef
 	bodyDef.type = b2Body.b2_staticBody
 
-	# Create walls
 	fixDef.shape = new b2PolygonShape
 
-	# Left wall
-	bodyDef.position.x = 0
-	bodyDef.position.y = tjump.scaleToPhys(tjump.HEIGHT / 2)
-	leftWidth = tjump.scaleToPhys(10 / 2)
-	leftHeight = tjump.scaleToPhys((tjump.HEIGHT + (10 * tjump.BALL_RADIUS)) / 2)
-	fixDef.shape.SetAsBox(leftWidth, leftHeight)
-	tjump.leftWall = tjump.world.CreateBody(bodyDef)
-	tjump.leftWall.CreateFixture(fixDef)
-
-	# Top wall
-	bodyDef.position.x = tjump.scaleToPhys(tjump.WIDTH / 2)
-	bodyDef.position.y = 0
-	topWidth = tjump.scaleToPhys(tjump.WIDTH / 2)
-	topHeight = tjump.scaleToPhys(10 / 2)
-	fixDef.shape.SetAsBox(topWidth, topHeight)
-	tjump.world.CreateBody(bodyDef).CreateFixture(fixDef)
-
-	# Right wall
-	bodyDef.position.x = tjump.scaleToPhys(tjump.WIDTH)
-	bodyDef.position.y = tjump.scaleToPhys(tjump.HEIGHT / 2)
-	rightWidth = leftWidth
-	rightHeight = leftHeight
-	fixDef.shape.SetAsBox(rightWidth, leftHeight)
-	tjump.world.CreateBody(bodyDef).CreateFixture(fixDef)
-
-	# Bottom wall (off screen)
-	bodyDef.position.x = tjump.scaleToPhys(tjump.WIDTH / 2)
-	bodyDef.position.y = tjump.scaleToPhys(tjump.HEIGHT + (5 * tjump.BALL_RADIUS))
-	bottomWidth = topWidth
-	bottomHeight = topHeight
-	fixDef.shape.SetAsBox(bottomWidth, topHeight)
-	tjump.bottomWall = tjump.world.CreateBody(bodyDef)
-	tjump.bottomWall.CreateFixture(fixDef)
-
-	# Create two walls in the top corners to make the ball bounce off at an angle
-	# (really tired of ball getting stuck)
-	# Top Left
-	bodyDef.position.x = tjump.scaleToPhys(1)
-	bodyDef.position.y = tjump.scaleToPhys(1)
-	bodyDef.angle = Math.PI / 4
-	topLeftWidth = tjump.scaleToPhys(15)
-	topLeftHeight = tjump.scaleToPhys(15)
-	fixDef.shape.SetAsBox(topLeftWidth, topLeftHeight)
-	tjump.world.CreateBody(bodyDef).CreateFixture(fixDef)
-	# Top right
-	bodyDef.position.x = tjump.scaleToPhys(tjump.WIDTH - 1)
-	bodyDef.position.y = tjump.scaleToPhys(1)
-	bodyDef.angle = Math.PI / 4
-	topRightWidth = tjump.scaleToPhys(15)
-	topRightHeight = tjump.scaleToPhys(15)
-	fixDef.shape.SetAsBox(topRightWidth, topRightHeight)
-	tjump.world.CreateBody(bodyDef).CreateFixture(fixDef)
+	bodyDef.position.x = tjump.scaleToPhys (platformDef.left-(tjump.getWidth() / 2))
+	bodyDef.position.y = tjump.scaleToPhys (-1 * (platformDef.top-(tjump.getHeight() / 2)))
+	width = tjump.scaleToPhys(platformDef.width)
+	height = tjump.scaleToPhys(5.0)
+	fixDef.shape.SetAsBox(width, height)
+	platform = tjump.world.CreateBody(bodyDef)
+	platform.CreateFixture(fixDef)
 
 ###
  Handles the BeginContact event from the physics 
@@ -104,7 +58,12 @@ tjump.init = ->
 	allowSleep = true
 	tjump.world = new Box2D.Dynamics.b2World(tjump.GRAVITY, allowSleep)
 
-	tjump.createWalls()
+	tjump.elementArticulator = new ElementArticulator()
+	tjump.domParser = new DomParser(tjump.elementArticulator)
+
+	# Parse the page
+	tjump.domParser.parsePage()
+	
 
 	# Contact listener for collision detection
 	listener = new Box2D.Dynamics.b2ContactListener

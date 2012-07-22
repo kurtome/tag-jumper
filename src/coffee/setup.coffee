@@ -17,20 +17,24 @@ tjump.ctx = tjump.canvas.getContext("2d")
 document.body.appendChild(tjump.overlay)
 
 # Constants
-tjump.SCALE = 30
-tjump.FRAME_RATE = 1 / 60
+tjump.SCALE = 32.0
+tjump.FRAME_RATE = 1.0 / 60
 tjump.VELOCITY_ITERATIONS = 10
 tjump.POSITION_ITERATIONS = 10
 tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(0, 0)
-tjump.WIDTH = tjump.canvas.width
-tjump.HEIGHT = tjump.canvas.height
 
+tjump.getWidth = ->
+	return tjump.canvas.offsetWidth
+
+tjump.getHeight = ->
+	return tjump.canvas.offsetHeight
 
 ###
  Converts screen points (pixels) to points the 
  physics engine works with
 ###
-tjump.scaleToPhys = (x) -> return (x / tjump.SCALE)
+tjump.scaleToPhys = (x) -> 
+	return (x / tjump.SCALE)
 
 ###
  Converts screen points (pixels) vector to points 
