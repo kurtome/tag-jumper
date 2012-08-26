@@ -7,6 +7,7 @@ class ElementArticulator
 			top: element.offsetTop
 			left: element.offsetLeft
 			width: element.offsetWidth
+			height: 5
 		}
 
 		tjump.createPlatform platformDef

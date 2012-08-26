@@ -15,7 +15,15 @@ testCoffeeOpts = "--output #{testTargetJsDir}"
 
 # Order matters!
 inOutPairs = [
-	['tag-jumper-main', ['setup', 'ElementArticulator', 'DomParser', 'main']]
+	['tag-jumper-main', 
+		[
+			'setup', 
+			'GameUi', 
+			'ElementArticulator', 
+			'DomParser', 
+			'main'
+		]
+	]
 ]
 #prodCoffeeFiles = []
 #

@@ -78,6 +78,58 @@ tjump.isBodyInContact = (contact, body) ->
 		return false
 
 
+class GameUi
+	constructor: (canvas, world, loopCallback) ->
+		width = canvas.offsetWidth
+		height = canvas.offsetHeight
+		@director = new CAAT.Director().initialize(width, height, canvas)
+		@scene = @director.createScene()
+
+
+		CAAT.PMR = tjump.SCALE
+		CAAT.enableBox2DDebug( true, @director, world)
+
+
+		@scene.onRenderStart = loopCallback
+
+		# Begin animating fps
+		fps = 45
+		CAAT.loop fps
+
+	bodyFromActor : (actor, world) => 
+		CAAT.B2DPolygonBody.createPolygonBody(
+			world,
+			{
+				x:                      actor.x,
+				y:                      actor.y,
+				bodyType:               Box2D.Dynamics.b2Body.b2_staticBody,
+				density:                1,
+				restitution:            1,
+				friction:               1,
+				image:                  null,
+				polygonType:            CAAT.B2DPolygonBody.Type.BOX,
+				bodyDef:                [
+					{ x: actor.x,               y: actor.y },
+					{ x: actor.x + actor.width, y: actor.y + actor.height }
+				],
+				bodyDefScale:           1,
+				bodyDefScaleTolerance:  0,
+				userData:               {}
+			}
+		)
+
+	createRectActorWithBody: (def, world) =>
+		actor = new CAAT.Actor()
+			.setLocation(def.top, def.left)
+			.setSize(def.width, def.height)
+			.setFillStyle('orange')
+
+		body = this.bodyFromActor actor, world
+		return body
+		
+
+
+
 class ElementArticulator
 	articulateElement: (element) =>
 		if not this.isValid element
@@ -87,6 +139,7 @@ class ElementArticulator
 			top: element.offsetTop
 			left: element.offsetLeft
 			width: element.offsetWidth
+			height: 5
 		}
 
 		tjump.createPlatform platformDef
@@ -126,13 +179,18 @@ class DomParser
 
 
 	parsePage: =>
+		@elementCount = 0
 		this.parseElement document.body
 		
 
 	parseElement: (element) =>
 		wasArticulated = @articulator.articulateElement element
+		@elementCount++
 
 		if wasArticulated
+			return
+
+		if @elementCount > 3000
 			return
 
 		this.parseElement child for child in element.childNodes
@@ -164,35 +222,61 @@ window.requestAnimFrame = do ->
  Creates a horizontal platform
 ###
 tjump.createPlatform = (platformDef) ->
-	b2BodyDef = Box2D.Dynamics.b2BodyDef
-	b2Body = Box2D.Dynamics.b2Body
-	b2FixtureDef = Box2D.Dynamics.b2FixtureDef
-	b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
+	tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	#b2BodyDef = Box2D.Dynamics.b2BodyDef
+	#b2Body = Box2D.Dynamics.b2Body
+	#b2FixtureDef = Box2D.Dynamics.b2FixtureDef
+	#b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
 
-	fixDef = new b2FixtureDef
-	fixDef.density = 1.0
-	fixDef.friction = 1
-	fixDef.restitution = 1
+	#fixDef = new b2FixtureDef
+	#fixDef.density = 1.0
+	#fixDef.friction = 1
+	#fixDef.restitution = 1
 
-	bodyDef = new b2BodyDef
-	bodyDef.type = b2Body.b2_staticBody
+	#bodyDef = new b2BodyDef
+	#bodyDef.type = b2Body.b2_staticBody
 
-	fixDef.shape = new b2PolygonShape
+	#fixDef.shape = new b2PolygonShape
 
-	bodyDef.position.x = tjump.scaleToPhys (platformDef.left-(tjump.getWidth() / 2))
-	bodyDef.position.y = tjump.scaleToPhys (-1 * (platformDef.top-(tjump.getHeight() / 2)))
-	width = tjump.scaleToPhys(platformDef.width)
-	height = tjump.scaleToPhys(5.0)
-	fixDef.shape.SetAsBox(width, height)
-	platform = tjump.world.CreateBody(bodyDef)
-	platform.CreateFixture(fixDef)
+	#bodyDef.position.x = tjump.scaleToPhys (platformDef.left-(tjump.getWidth() / 2))
+	#bodyDef.position.y = tjump.scaleToPhys (-1 * (platformDef.top-(tjump.getHeight() / 2)))
+	#width = tjump.scaleToPhys(platformDef.width)
+	#height = tjump.scaleToPhys(5.0)
+	#fixDef.shape.SetAsBox(width, height)
+	#platform = tjump.world.CreateBody(bodyDef)
+	#platform.CreateFixture(fixDef)
 
 ###
  Handles the BeginContact event from the physics 
  world.
 ###
 tjump.beginContact = (contact) ->
-	tjump.paddleAi.beginContact(contact)
+	# TODO
+
+
+
+
+
+
+###
+ Does all the work we need to do at each tick of the
+ game clock.
+###
+tjump.update = -> 
+	tjump.world.Step( 
+		tjump.FRAME_RATE, 
+		tjump.VELOCITY_ITERATIONS, 
+		tjump.POSITION_ITERATIONS 
+	)
+	tjump.world.DrawDebugData()
+	tjump.world.ClearForces()
+
+	# Kick off the next loop
+	#requestAnimFrame(tjump.update)
+# update()
+
+
+
 
 ###
  Initalizes everything we need to get started, should
@@ -206,6 +290,8 @@ tjump.init = ->
 
 	tjump.elementArticulator = new ElementArticulator()
 	tjump.domParser = new DomParser(tjump.elementArticulator)
+
+	tjump.ui = new GameUi(tjump.canvas, tjump.world, tjump.update)
 
 	# Parse the page
 	tjump.domParser.parsePage()
@@ -226,22 +312,6 @@ tjump.init = ->
 	tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
-###
- Does all the work we need to do at each tick of the
- game clock.
-###
-tjump.update = -> 
-	tjump.world.Step( 
-		tjump.FRAME_RATE, 
-		tjump.VELOCITY_ITERATIONS, 
-		tjump.POSITION_ITERATIONS 
-	)
-	tjump.world.DrawDebugData()
-	tjump.world.ClearForces()
-
-	# Kick off the next loop
-	requestAnimFrame(tjump.update)
-# update()
 
 
 # Set everything up.
