@@ -87,7 +87,7 @@ class GameUi
 
 
 		CAAT.PMR = tjump.SCALE
-		CAAT.enableBox2DDebug( true, @director, world)
+		CAAT.enableBox2DDebug(true, @director, world)
 
 
 		@scene.onRenderStart = loopCallback
@@ -120,12 +120,22 @@ class GameUi
 
 	createRectActorWithBody: (def, world) =>
 		actor = new CAAT.Actor()
-			.setLocation(def.top, def.left)
+			.setLocation(def.left, def.top)
 			.setSize(def.width, def.height)
 			.setFillStyle('orange')
 
+		@scene.addChild(actor)
+
 		body = this.bodyFromActor actor, world
 		return body
+
+	createTextActor: (def) =>
+		actor = new CAAT.TextActor()
+			.setLocation(def.left, def.top)
+			.setText(def.htmlId)
+			.setFillStyle('black')
+
+		@scene.addChild(actor)
 		
 
 
@@ -135,11 +145,15 @@ class ElementArticulator
 		if not this.isValid element
 			return false
 
+		if Math.random() > .5
+			return false
+
 		platformDef = {
 			top: element.offsetTop
 			left: element.offsetLeft
 			width: element.offsetWidth
 			height: 5
+			htmlId: element.id
 		}
 
 		tjump.createPlatform platformDef
@@ -187,10 +201,10 @@ class DomParser
 		wasArticulated = @articulator.articulateElement element
 		@elementCount++
 
-		if wasArticulated
-			return
+		#if wasArticulated
+		#	return
 
-		if @elementCount > 3000
+		if @elementCount > 30000
 			return
 
 		this.parseElement child for child in element.childNodes
@@ -223,6 +237,8 @@ window.requestAnimFrame = do ->
 ###
 tjump.createPlatform = (platformDef) ->
 	tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	#tjump.ui.createTextActor(platformDef)
+	
 	#b2BodyDef = Box2D.Dynamics.b2BodyDef
 	#b2Body = Box2D.Dynamics.b2Body
 	#b2FixtureDef = Box2D.Dynamics.b2FixtureDef
@@ -317,5 +333,5 @@ tjump.init = ->
 # Set everything up.
 tjump.init()
 # Begin the animation loop.
-requestAnimFrame(tjump.update)
+#requestAnimFrame(tjump.update)
 

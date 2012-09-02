@@ -19,6 +19,8 @@ window.requestAnimFrame = do ->
 ###
 tjump.createPlatform = (platformDef) ->
 	tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	#tjump.ui.createTextActor(platformDef)
+	
 	#b2BodyDef = Box2D.Dynamics.b2BodyDef
 	#b2Body = Box2D.Dynamics.b2Body
 	#b2FixtureDef = Box2D.Dynamics.b2FixtureDef
@@ -64,7 +66,7 @@ tjump.update = ->
 		tjump.VELOCITY_ITERATIONS, 
 		tjump.POSITION_ITERATIONS 
 	)
-	tjump.world.DrawDebugData()
+	#tjump.world.DrawDebugData()
 	tjump.world.ClearForces()
 
 	# Kick off the next loop
@@ -113,5 +115,5 @@ tjump.init = ->
 # Set everything up.
 tjump.init()
 # Begin the animation loop.
-requestAnimFrame(tjump.update)
+#requestAnimFrame(tjump.update)
 

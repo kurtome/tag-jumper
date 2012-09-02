@@ -18,10 +18,10 @@ class DomParser
 		wasArticulated = @articulator.articulateElement element
 		@elementCount++
 
-		if wasArticulated
-			return
+		#if wasArticulated
+		#	return
 
-		if @elementCount > 3000
+		if @elementCount > 30000
 			return
 
 		this.parseElement child for child in element.childNodes

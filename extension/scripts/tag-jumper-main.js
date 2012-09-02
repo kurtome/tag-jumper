@@ -111,6 +111,8 @@ tjump.isBodyInContact = function(contact, body) {
 GameUi = (function() {
 
   function GameUi(canvas, world, loopCallback) {
+    this.createTextActor = __bind(this.createTextActor, this);
+
     this.createRectActorWithBody = __bind(this.createRectActorWithBody, this);
 
     this.bodyFromActor = __bind(this.bodyFromActor, this);
@@ -154,9 +156,16 @@ GameUi = (function() {
 
   GameUi.prototype.createRectActorWithBody = function(def, world) {
     var actor, body;
-    actor = new CAAT.Actor().setLocation(def.top, def.left).setSize(def.width, def.height).setFillStyle('orange');
+    actor = new CAAT.Actor().setLocation(def.left, def.top).setSize(def.width, def.height).setFillStyle('orange');
+    this.scene.addChild(actor);
     body = this.bodyFromActor(actor, world);
     return body;
+  };
+
+  GameUi.prototype.createTextActor = function(def) {
+    var actor;
+    actor = new CAAT.TextActor().setLocation(def.left, def.top).setText(def.htmlId).setFillStyle('black');
+    return this.scene.addChild(actor);
   };
 
   return GameUi;
@@ -177,11 +186,15 @@ ElementArticulator = (function() {
     if (!this.isValid(element)) {
       return false;
     }
+    if (Math.random() > .5) {
+      return false;
+    }
     platformDef = {
       top: element.offsetTop,
       left: element.offsetLeft,
       width: element.offsetWidth,
-      height: 5
+      height: 5,
+      htmlId: element.id
     };
     tjump.createPlatform(platformDef);
     return true;
@@ -238,10 +251,7 @@ DomParser = (function() {
     var child, wasArticulated, _i, _len, _ref, _results;
     wasArticulated = this.articulator.articulateElement(element);
     this.elementCount++;
-    if (wasArticulated) {
-      return;
-    }
-    if (this.elementCount > 3000) {
+    if (this.elementCount > 30000) {
       return;
     }
     _ref = element.childNodes;
@@ -325,5 +335,3 @@ tjump.init = function() {
 };
 
 tjump.init();
-
-requestAnimFrame(tjump.update);

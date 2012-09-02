@@ -7,14 +7,14 @@ class GameUi
 
 
 		CAAT.PMR = tjump.SCALE
-		CAAT.enableBox2DDebug( true, @director, world)
+		CAAT.enableBox2DDebug(true, @director, world)
 
 
 		@scene.onRenderStart = loopCallback
 
 		# Begin animating fps
-		fps = 45
-		CAAT.loop fps
+		CAAT.loop tjump.FRAME_RATE
+
 
 	bodyFromActor : (actor, world) => 
 		CAAT.B2DPolygonBody.createPolygonBody(
@@ -40,11 +40,21 @@ class GameUi
 
 	createRectActorWithBody: (def, world) =>
 		actor = new CAAT.Actor()
-			.setLocation(def.top, def.left)
+			.setLocation(def.left, def.top)
 			.setSize(def.width, def.height)
 			.setFillStyle('orange')
 
+		@scene.addChild(actor)
+
 		body = this.bodyFromActor actor, world
 		return body
+
+	createTextActor: (def) =>
+		actor = new CAAT.TextActor()
+			.setLocation(def.left, def.top)
+			.setText(def.htmlId)
+			.setFillStyle('black')
+
+		@scene.addChild(actor)
 		
 

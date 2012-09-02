@@ -3,11 +3,15 @@ class ElementArticulator
 		if not this.isValid element
 			return false
 
+		if Math.random() > .5
+			return false
+
 		platformDef = {
 			top: element.offsetTop
 			left: element.offsetLeft
 			width: element.offsetWidth
 			height: 5
+			htmlId: element.id
 		}
 
 		tjump.createPlatform platformDef
