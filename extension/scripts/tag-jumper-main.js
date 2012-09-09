@@ -117,7 +117,7 @@ GameUi = (function() {
 
     this.bodyFromActor = __bind(this.bodyFromActor, this);
 
-    var fps, height, width;
+    var height, width;
     width = canvas.offsetWidth;
     height = canvas.offsetHeight;
     this.director = new CAAT.Director().initialize(width, height, canvas);
@@ -125,8 +125,7 @@ GameUi = (function() {
     CAAT.PMR = tjump.SCALE;
     CAAT.enableBox2DDebug(true, this.director, world);
     this.scene.onRenderStart = loopCallback;
-    fps = 45;
-    CAAT.loop(fps);
+    CAAT.loop(tjump.FRAME_RATE);
   }
 
   GameUi.prototype.bodyFromActor = function(actor, world) {
@@ -268,17 +267,6 @@ DomParser = (function() {
 })();
 
 /*
- Function that animates the
-*/
-
-
-window.requestAnimFrame = (function() {
-  return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback, element) {
-    return window.setTimeout(callback, 1000 / 60);
-  };
-})();
-
-/*
  Creates a horizontal platform
 */
 
@@ -303,7 +291,6 @@ tjump.beginContact = function(contact) {};
 
 tjump.update = function() {
   tjump.world.Step(tjump.FRAME_RATE, tjump.VELOCITY_ITERATIONS, tjump.POSITION_ITERATIONS);
-  tjump.world.DrawDebugData();
   return tjump.world.ClearForces();
 };
 

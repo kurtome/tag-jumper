@@ -93,8 +93,8 @@ class GameUi
 		@scene.onRenderStart = loopCallback
 
 		# Begin animating fps
-		fps = 45
-		CAAT.loop fps
+		CAAT.loop tjump.FRAME_RATE
+
 
 	bodyFromActor : (actor, world) => 
 		CAAT.B2DPolygonBody.createPolygonBody(
@@ -219,18 +219,6 @@ class DomParser
 
 #window = chrome.extension.getBackgroundPage()
 
-###
- Function that animates the 
-###
-window.requestAnimFrame = do -> 
-	return window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.oRequestAnimationFrame ||
-		window.msRequestAnimationFrame ||
-		(callback, element) -> 
-			window.setTimeout(callback, 1000 / 60)
-
 
 ###
  Creates a horizontal platform
@@ -284,7 +272,7 @@ tjump.update = ->
 		tjump.VELOCITY_ITERATIONS, 
 		tjump.POSITION_ITERATIONS 
 	)
-	tjump.world.DrawDebugData()
+	#tjump.world.DrawDebugData()
 	tjump.world.ClearForces()
 
 	# Kick off the next loop
@@ -328,10 +316,6 @@ tjump.init = ->
 	tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
-
-
-# Set everything up.
+# Set everything up. 
 tjump.init()
-# Begin the animation loop.
-#requestAnimFrame(tjump.update)
 

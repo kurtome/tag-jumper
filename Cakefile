@@ -23,6 +23,11 @@ inOutPairs = [
 			'DomParser', 
 			'main'
 		]
+	],
+	['entry',
+		[
+			'entry'
+		]
 	]
 ]
 #prodCoffeeFiles = []

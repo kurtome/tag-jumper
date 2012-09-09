@@ -1,18 +1,6 @@
 
 #window = chrome.extension.getBackgroundPage()
 
-###
- Function that animates the 
-###
-window.requestAnimFrame = do -> 
-	return window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.oRequestAnimationFrame ||
-		window.msRequestAnimationFrame ||
-		(callback, element) -> 
-			window.setTimeout(callback, 1000 / 60)
-
 
 ###
  Creates a horizontal platform
@@ -110,10 +98,6 @@ tjump.init = ->
 	tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
-
-
-# Set everything up.
+# Set everything up. 
 tjump.init()
-# Begin the animation loop.
-#requestAnimFrame(tjump.update)
 
