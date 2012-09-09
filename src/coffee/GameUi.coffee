@@ -43,11 +43,10 @@ class GameUi
 			.setLocation(def.left, def.top)
 			.setSize(def.width, def.height)
 			.setFillStyle('orange')
+			.setAlpha(.6)
 
 		@scene.addChild(actor)
-
-		body = this.bodyFromActor actor, world
-		return body
+		return actor
 
 	createTextActor: (def) =>
 		actor = new CAAT.TextActor()

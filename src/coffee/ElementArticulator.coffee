@@ -6,15 +6,8 @@ class ElementArticulator
 		if Math.random() > .5
 			return false
 
-		platformDef = {
-			top: element.offsetTop
-			left: element.offsetLeft
-			width: element.offsetWidth
-			height: 5
-			htmlId: element.id
-		}
 
-		tjump.createPlatform platformDef
+		tjump.createPlatform element
 		return true
 
 
@@ -22,10 +15,10 @@ class ElementArticulator
 		if not element.offsetWidth
 			return false
 
-		if element.offsetWidth > tjump.canvas.offsetWidth / 3
+		if element.offsetWidth > tjump.canvas.offsetWidth / 2
 			return false
 
-		if element.offsetHeight > tjump.canvas.offsetHeight / 3
+		if element.offsetHeight > tjump.canvas.offsetHeight / 2
 			return false
 		
 		if element.offsetWidth < 5
