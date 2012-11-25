@@ -123,11 +123,10 @@ class GameUi
 			.setLocation(def.left, def.top)
 			.setSize(def.width, def.height)
 			.setFillStyle('orange')
+			.setAlpha(.6)
 
 		@scene.addChild(actor)
-
-		body = this.bodyFromActor actor, world
-		return body
+		return actor
 
 	createTextActor: (def) =>
 		actor = new CAAT.TextActor()
@@ -148,15 +147,8 @@ class ElementArticulator
 		if Math.random() > .5
 			return false
 
-		platformDef = {
-			top: element.offsetTop
-			left: element.offsetLeft
-			width: element.offsetWidth
-			height: 5
-			htmlId: element.id
-		}
 
-		tjump.createPlatform platformDef
+		tjump.createPlatform element
 		return true
 
 
@@ -164,10 +156,10 @@ class ElementArticulator
 		if not element.offsetWidth
 			return false
 
-		if element.offsetWidth > tjump.canvas.offsetWidth / 3
+		if element.offsetWidth > tjump.canvas.offsetWidth / 2
 			return false
 
-		if element.offsetHeight > tjump.canvas.offsetHeight / 3
+		if element.offsetHeight > tjump.canvas.offsetHeight / 2
 			return false
 		
 		if element.offsetWidth < 5
@@ -223,32 +215,19 @@ class DomParser
 ###
  Creates a horizontal platform
 ###
-tjump.createPlatform = (platformDef) ->
-	tjump.ui.createRectActorWithBody(platformDef, tjump.world)
-	#tjump.ui.createTextActor(platformDef)
-	
-	#b2BodyDef = Box2D.Dynamics.b2BodyDef
-	#b2Body = Box2D.Dynamics.b2Body
-	#b2FixtureDef = Box2D.Dynamics.b2FixtureDef
-	#b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape
+tjump.createPlatform = (element) ->
+	platformDef = {
+		top: element.offsetTop
+		left: element.offsetLeft
+		width: element.offsetWidth
+		height: element.offsetHeight
+		htmlId: element.id
+	}
 
-	#fixDef = new b2FixtureDef
-	#fixDef.density = 1.0
-	#fixDef.friction = 1
-	#fixDef.restitution = 1
+	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	body = tjump.ui.bodyFromActor actor, tjump.world
 
-	#bodyDef = new b2BodyDef
-	#bodyDef.type = b2Body.b2_staticBody
-
-	#fixDef.shape = new b2PolygonShape
-
-	#bodyDef.position.x = tjump.scaleToPhys (platformDef.left-(tjump.getWidth() / 2))
-	#bodyDef.position.y = tjump.scaleToPhys (-1 * (platformDef.top-(tjump.getHeight() / 2)))
-	#width = tjump.scaleToPhys(platformDef.width)
-	#height = tjump.scaleToPhys(5.0)
-	#fixDef.shape.SetAsBox(width, height)
-	#platform = tjump.world.CreateBody(bodyDef)
-	#platform.CreateFixture(fixDef)
+	tjump.updatables.push new ElementActor(element, actor)
 
 ###
  Handles the BeginContact event from the physics 
@@ -256,8 +235,6 @@ tjump.createPlatform = (platformDef) ->
 ###
 tjump.beginContact = (contact) ->
 	# TODO
-
-
 
 
 
@@ -274,6 +251,10 @@ tjump.update = ->
 	)
 	#tjump.world.DrawDebugData()
 	tjump.world.ClearForces()
+	
+	debugger
+	updatable.update() for updatable in tjump.updatables
+
 
 	# Kick off the next loop
 	#requestAnimFrame(tjump.update)
@@ -287,6 +268,7 @@ tjump.update = ->
  only be called once to set up.
 ###
 tjump.init = ->
+	tjump.updatables = []
 	b2DebugDraw = Box2D.Dynamics.b2DebugDraw
 
 	allowSleep = true
@@ -296,6 +278,7 @@ tjump.init = ->
 	tjump.domParser = new DomParser(tjump.elementArticulator)
 
 	tjump.ui = new GameUi(tjump.canvas, tjump.world, tjump.update)
+
 
 	# Parse the page
 	tjump.domParser.parsePage()

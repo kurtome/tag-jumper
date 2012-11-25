@@ -3,7 +3,7 @@
 fs	 = require 'fs'
 {exec} = require 'child_process'
 util   = require 'util'
-uglify = require './node_modules/uglify-js'
+uglify = require "uglify-js"
 
 prodSrcCoffeeDir	 = 'src/coffee'
 testSrcCoffeeDir	 = 'test/coffee'
@@ -149,24 +149,8 @@ uglifyJs = (prodTargetFileName) ->
 	prodTargetJsMinFile  = "#{prodTargetJsDir}/#{prodTargetFileName}.min.js"
 	util.log "Uglifying #{prodTargetJsFile} to #{prodTargetJsMinFile}"
 
-	fs.readFile prodTargetJsFile, 'utf8', (err, fileContents) ->
-		jsp = uglify.parser
-		pro = uglify.uglify
-		util.log "Read error (if exists) = #{err}"
-		ast = jsp.parse fileContents  # parse code and get the initial AST
-		ast = pro.ast_mangle ast # get a new AST with mangled names
-		ast = pro.ast_squeeze ast # get an AST with compression optimizations
-		final_code = pro.gen_code ast # compressed code here
-	
-		fs.writeFile prodTargetJsMinFile, final_code
-
-		# Commented out in order to leave non-minified js file,
-		# don't want to delete it (useful for debugging)
-		#fs.unlink prodTargetJsFile, (err) -> handleError(err) if err
-		
-		message = "Uglified #{prodTargetJsMinFile}"
-		util.log message
-		displayNotification message
+	minResult = uglify.minify prodTargetJsFile
+	fs.writeFile prodTargetJsMinFile, minResult.code
 	
 coffee = (options = "", file) ->
 	util.log "Compiling #{file}"
