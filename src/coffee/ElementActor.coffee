@@ -1,18 +1,16 @@
 class ElementActor
 	constructor: (@element, @actor) ->
+		@$element = $(element)
 
 	getLocation: =>
 		def = {
-			top: @element.scrollTop
-			left: @element.scrollLeft
+			top: @$element.offset().top - tjump.$document.scrollTop()
+			left: @$element.offset().left - tjump.$document.scrollLeft()
 		}
 		return def
 
 	isVisible: =>
-		if not @element.offsetWidth
-			return false
-
-		return true
+		return @$element.is(":visible")
 
 	update: =>
 		if this.isVisible()

@@ -14,6 +14,8 @@ tjump.overlay.appendChild(tjump.canvas)
 
 tjump.ctx = tjump.canvas.getContext("2d")
 
+tjump.$document = $(document)
+
 document.body.appendChild(tjump.overlay)
 
 # Constants

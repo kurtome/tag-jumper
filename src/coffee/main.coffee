@@ -42,7 +42,6 @@ tjump.update = ->
 	#tjump.world.DrawDebugData()
 	tjump.world.ClearForces()
 	
-	debugger
 	updatable.update() for updatable in tjump.updatables
 
 
@@ -80,13 +79,13 @@ tjump.init = ->
 	tjump.world.SetContactListener(listener)
 
 	# setup debug draw
-	debugDraw = new b2DebugDraw()
-	debugDraw.SetSprite(tjump.ctx)
-	debugDraw.SetDrawScale(tjump.SCALE)
-	debugDraw.SetFillAlpha(0.4)
-	debugDraw.SetLineThickness(1.0)
-	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
-	tjump.world.SetDebugDraw(debugDraw)
+	# debugDraw = new b2DebugDraw()
+	# debugDraw.SetSprite(tjump.ctx)
+	# debugDraw.SetDrawScale(tjump.SCALE)
+	# debugDraw.SetFillAlpha(0.4)
+	# debugDraw.SetLineThickness(1.0)
+	# debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
+	# tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
 # Set everything up. 

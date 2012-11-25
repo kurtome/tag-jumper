@@ -3,7 +3,7 @@ class ElementArticulator
 		if not this.isValid element
 			return false
 
-		if Math.random() > .5
+		if Math.random() < .9
 			return false
 
 

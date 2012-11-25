@@ -14,6 +14,8 @@ tjump.overlay.appendChild(tjump.canvas)
 
 tjump.ctx = tjump.canvas.getContext("2d")
 
+tjump.$document = $(document)
+
 document.body.appendChild(tjump.overlay)
 
 # Constants
@@ -76,6 +78,30 @@ tjump.isBodyInContact = (contact, body) ->
 		return true
 	else
 		return false
+
+
+class ElementActor
+	constructor: (@element, @actor) ->
+		@$element = $(element)
+
+	getLocation: =>
+		def = {
+			top: @$element.offset().top - tjump.$document.scrollTop()
+			left: @$element.offset().left - tjump.$document.scrollLeft()
+		}
+		return def
+
+	isVisible: =>
+		return @$element.is(":visible")
+
+	update: =>
+		if this.isVisible()
+			def = this.getLocation()
+			@actor.setVisible(true)
+			@actor.setLocation(def.left, def.top)
+		else
+			@actor.setVisible(false)
+
 
 
 class GameUi
@@ -144,7 +170,7 @@ class ElementArticulator
 		if not this.isValid element
 			return false
 
-		if Math.random() > .5
+		if Math.random() < .9
 			return false
 
 
@@ -252,7 +278,6 @@ tjump.update = ->
 	#tjump.world.DrawDebugData()
 	tjump.world.ClearForces()
 	
-	debugger
 	updatable.update() for updatable in tjump.updatables
 
 
@@ -290,13 +315,13 @@ tjump.init = ->
 	tjump.world.SetContactListener(listener)
 
 	# setup debug draw
-	debugDraw = new b2DebugDraw()
-	debugDraw.SetSprite(tjump.ctx)
-	debugDraw.SetDrawScale(tjump.SCALE)
-	debugDraw.SetFillAlpha(0.4)
-	debugDraw.SetLineThickness(1.0)
-	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
-	tjump.world.SetDebugDraw(debugDraw)
+	# debugDraw = new b2DebugDraw()
+	# debugDraw.SetSprite(tjump.ctx)
+	# debugDraw.SetDrawScale(tjump.SCALE)
+	# debugDraw.SetFillAlpha(0.4)
+	# debugDraw.SetLineThickness(1.0)
+	# debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
+	# tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
 # Set everything up. 
