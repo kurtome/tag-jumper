@@ -1,25 +1,20 @@
 class GameUi
-	constructor: (canvas, world, loopCallback) ->
+	constructor: (canvas, @world, loopCallback) ->
 		width = canvas.offsetWidth
 		height = canvas.offsetHeight
 		@director = new CAAT.Director().initialize(width, height, canvas)
 		@scene = @director.createScene()
 
-
 		CAAT.PMR = tjump.SCALE
-		CAAT.enableBox2DDebug(true, @director, world)
-
+		CAAT.enableBox2DDebug(true, @director, @world)
 
 		@scene.onRenderStart = loopCallback
 
 		# Begin animating fps
 		CAAT.loop tjump.FRAME_RATE
 
-
-	bodyFromActor : (actor, world) => 
-		CAAT.B2DPolygonBody.createPolygonBody(
-			world,
-			{
+	getDefaultBodyDef : (actor) ->
+		def = {
 				x:                      actor.x,
 				y:                      actor.y,
 				bodyType:               Box2D.Dynamics.b2Body.b2_staticBody,
@@ -36,9 +31,24 @@ class GameUi
 				bodyDefScaleTolerance:  0,
 				userData:               {}
 			}
-		)
+		return def
 
-	createRectActorWithBody: (def, world) =>
+
+	bodyFromActor : (actor, bodyDef) => 
+		body = CAAT.B2DPolygonBody.createPolygonBody(
+			@world,
+			bodyDef
+		)
+		return body
+
+	rectBodyFromActor : (actor) => 
+		body = CAAT.B2DPolygonBody.createPolygonBody(
+			@world,
+			this.getDefaultBodyDef(actor)
+		)
+		return body
+
+	createRectActorWithBody: (def, @world) =>
 		actor = new CAAT.Actor()
 			.setLocation(def.left, def.top)
 			.setSize(def.width, def.height)
@@ -51,9 +61,10 @@ class GameUi
 	createTextActor: (def) =>
 		actor = new CAAT.TextActor()
 			.setLocation(def.left, def.top)
-			.setText(def.htmlId)
+			.setText(def.text)
 			.setFillStyle('black')
 
 		@scene.addChild(actor)
+		return actor
 		
 

@@ -23,7 +23,7 @@ tjump.SCALE = 32.0
 tjump.FRAME_RATE = 1.0 / 60
 tjump.VELOCITY_ITERATIONS = 10
 tjump.POSITION_ITERATIONS = 10
-tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(0, 0)
+tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(9.8, 5)
 
 tjump.getWidth = ->
 	return tjump.canvas.offsetWidth

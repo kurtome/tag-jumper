@@ -11,20 +11,38 @@ tjump.createPlatform = (element) ->
 		left: element.offsetLeft
 		width: element.offsetWidth
 		height: element.offsetHeight
-		htmlId: element.id
 	}
 
 	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
-	body = tjump.ui.bodyFromActor actor, tjump.world
+	body = tjump.ui.rectBodyFromActor actor
 
 	tjump.updatables.push new ElementActor(element, actor)
+
+tjump.createPlayer = ->
+	platformDef = {
+		top: 200
+		left: 200
+		width: 10
+		height: 20
+	}
+
+	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	actor.setFillStyle('green') 
+	actor.setAlpha(.8)
+
+	bodyDef = tjump.ui.getDefaultBodyDef(actor)
+	bodyDef.bodyType = Box2D.Dynamics.b2Body.b2_dynamicBody
+	body = tjump.ui.bodyFromActor actor, bodyDef
+
+	tjump.updatables.push new ElementActor(element, actor)
+
 
 ###
  Handles the BeginContact event from the physics 
  world.
 ###
 tjump.beginContact = (contact) ->
-	# TODO
+	# TODO - collission 'n stuff
 
 
 
@@ -78,14 +96,16 @@ tjump.init = ->
 	listener.BeginContact = tjump.beginContact
 	tjump.world.SetContactListener(listener)
 
-	# setup debug draw
-	# debugDraw = new b2DebugDraw()
-	# debugDraw.SetSprite(tjump.ctx)
-	# debugDraw.SetDrawScale(tjump.SCALE)
-	# debugDraw.SetFillAlpha(0.4)
-	# debugDraw.SetLineThickness(1.0)
-	# debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
-	# tjump.world.SetDebugDraw(debugDraw)
+	tjump.createPlayer()
+
+	setup debug draw
+	debugDraw = new b2DebugDraw()
+	debugDraw.SetSprite(tjump.ctx)
+	debugDraw.SetDrawScale(tjump.SCALE)
+	debugDraw.SetFillAlpha(0.4)
+	debugDraw.SetLineThickness(1.0)
+	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
+	tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
 # Set everything up. 

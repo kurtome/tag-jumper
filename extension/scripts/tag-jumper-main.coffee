@@ -23,7 +23,7 @@ tjump.SCALE = 32.0
 tjump.FRAME_RATE = 1.0 / 60
 tjump.VELOCITY_ITERATIONS = 10
 tjump.POSITION_ITERATIONS = 10
-tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(0, 0)
+tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(9.8, 5)
 
 tjump.getWidth = ->
 	return tjump.canvas.offsetWidth
@@ -105,27 +105,22 @@ class ElementActor
 
 
 class GameUi
-	constructor: (canvas, world, loopCallback) ->
+	constructor: (canvas, @world, loopCallback) ->
 		width = canvas.offsetWidth
 		height = canvas.offsetHeight
 		@director = new CAAT.Director().initialize(width, height, canvas)
 		@scene = @director.createScene()
 
-
 		CAAT.PMR = tjump.SCALE
-		CAAT.enableBox2DDebug(true, @director, world)
-
+		CAAT.enableBox2DDebug(true, @director, @world)
 
 		@scene.onRenderStart = loopCallback
 
 		# Begin animating fps
 		CAAT.loop tjump.FRAME_RATE
 
-
-	bodyFromActor : (actor, world) => 
-		CAAT.B2DPolygonBody.createPolygonBody(
-			world,
-			{
+	getDefaultBodyDef : (actor) ->
+		def = {
 				x:                      actor.x,
 				y:                      actor.y,
 				bodyType:               Box2D.Dynamics.b2Body.b2_staticBody,
@@ -142,9 +137,24 @@ class GameUi
 				bodyDefScaleTolerance:  0,
 				userData:               {}
 			}
-		)
+		return def
 
-	createRectActorWithBody: (def, world) =>
+
+	bodyFromActor : (actor, bodyDef) => 
+		body = CAAT.B2DPolygonBody.createPolygonBody(
+			@world,
+			bodyDef
+		)
+		return body
+
+	rectBodyFromActor : (actor) => 
+		body = CAAT.B2DPolygonBody.createPolygonBody(
+			@world,
+			this.getDefaultBodyDef(actor)
+		)
+		return body
+
+	createRectActorWithBody: (def, @world) =>
 		actor = new CAAT.Actor()
 			.setLocation(def.left, def.top)
 			.setSize(def.width, def.height)
@@ -157,10 +167,11 @@ class GameUi
 	createTextActor: (def) =>
 		actor = new CAAT.TextActor()
 			.setLocation(def.left, def.top)
-			.setText(def.htmlId)
+			.setText(def.text)
 			.setFillStyle('black')
 
 		@scene.addChild(actor)
+		return actor
 		
 
 
@@ -247,20 +258,38 @@ tjump.createPlatform = (element) ->
 		left: element.offsetLeft
 		width: element.offsetWidth
 		height: element.offsetHeight
-		htmlId: element.id
 	}
 
 	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
-	body = tjump.ui.bodyFromActor actor, tjump.world
+	body = tjump.ui.rectBodyFromActor actor
 
 	tjump.updatables.push new ElementActor(element, actor)
+
+tjump.createPlayer = ->
+	platformDef = {
+		top: 200
+		left: 200
+		width: 10
+		height: 20
+	}
+
+	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	actor.setFillStyle('green') 
+	actor.setAlpha(.8)
+
+	bodyDef = tjump.ui.getDefaultBodyDef(actor)
+	bodyDef.bodyType = Box2D.Dynamics.b2Body.b2_dynamicBody
+	body = tjump.ui.bodyFromActor actor, bodyDef
+
+	tjump.updatables.push new ElementActor(element, actor)
+
 
 ###
  Handles the BeginContact event from the physics 
  world.
 ###
 tjump.beginContact = (contact) ->
-	# TODO
+	# TODO - collission 'n stuff
 
 
 
@@ -314,14 +343,16 @@ tjump.init = ->
 	listener.BeginContact = tjump.beginContact
 	tjump.world.SetContactListener(listener)
 
-	# setup debug draw
-	# debugDraw = new b2DebugDraw()
-	# debugDraw.SetSprite(tjump.ctx)
-	# debugDraw.SetDrawScale(tjump.SCALE)
-	# debugDraw.SetFillAlpha(0.4)
-	# debugDraw.SetLineThickness(1.0)
-	# debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
-	# tjump.world.SetDebugDraw(debugDraw)
+	tjump.createPlayer()
+
+	setup debug draw
+	debugDraw = new b2DebugDraw()
+	debugDraw.SetSprite(tjump.ctx)
+	debugDraw.SetDrawScale(tjump.SCALE)
+	debugDraw.SetFillAlpha(0.4)
+	debugDraw.SetLineThickness(1.0)
+	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
+	tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
 # Set everything up. 

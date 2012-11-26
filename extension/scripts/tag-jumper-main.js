@@ -32,7 +32,7 @@ tjump.VELOCITY_ITERATIONS = 10;
 
 tjump.POSITION_ITERATIONS = 10;
 
-tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(0, 0);
+tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(9.8, 5);
 
 tjump.getWidth = function() {
   return tjump.canvas.offsetWidth;
@@ -155,25 +155,29 @@ ElementActor = (function() {
 GameUi = (function() {
 
   function GameUi(canvas, world, loopCallback) {
+    var height, width;
+    this.world = world;
     this.createTextActor = __bind(this.createTextActor, this);
 
     this.createRectActorWithBody = __bind(this.createRectActorWithBody, this);
 
+    this.rectBodyFromActor = __bind(this.rectBodyFromActor, this);
+
     this.bodyFromActor = __bind(this.bodyFromActor, this);
 
-    var height, width;
     width = canvas.offsetWidth;
     height = canvas.offsetHeight;
     this.director = new CAAT.Director().initialize(width, height, canvas);
     this.scene = this.director.createScene();
     CAAT.PMR = tjump.SCALE;
-    CAAT.enableBox2DDebug(true, this.director, world);
+    CAAT.enableBox2DDebug(true, this.director, this.world);
     this.scene.onRenderStart = loopCallback;
     CAAT.loop(tjump.FRAME_RATE);
   }
 
-  GameUi.prototype.bodyFromActor = function(actor, world) {
-    return CAAT.B2DPolygonBody.createPolygonBody(world, {
+  GameUi.prototype.getDefaultBodyDef = function(actor) {
+    var def;
+    def = {
       x: actor.x,
       y: actor.y,
       bodyType: Box2D.Dynamics.b2Body.b2_staticBody,
@@ -194,11 +198,25 @@ GameUi = (function() {
       bodyDefScale: 1,
       bodyDefScaleTolerance: 0,
       userData: {}
-    });
+    };
+    return def;
+  };
+
+  GameUi.prototype.bodyFromActor = function(actor, bodyDef) {
+    var body;
+    body = CAAT.B2DPolygonBody.createPolygonBody(this.world, bodyDef);
+    return body;
+  };
+
+  GameUi.prototype.rectBodyFromActor = function(actor) {
+    var body;
+    body = CAAT.B2DPolygonBody.createPolygonBody(this.world, this.getDefaultBodyDef(actor));
+    return body;
   };
 
   GameUi.prototype.createRectActorWithBody = function(def, world) {
     var actor;
+    this.world = world;
     actor = new CAAT.Actor().setLocation(def.left, def.top).setSize(def.width, def.height).setFillStyle('orange').setAlpha(.6);
     this.scene.addChild(actor);
     return actor;
@@ -206,8 +224,9 @@ GameUi = (function() {
 
   GameUi.prototype.createTextActor = function(def) {
     var actor;
-    actor = new CAAT.TextActor().setLocation(def.left, def.top).setText(def.htmlId).setFillStyle('black');
-    return this.scene.addChild(actor);
+    actor = new CAAT.TextActor().setLocation(def.left, def.top).setText(def.text).setFillStyle('black');
+    this.scene.addChild(actor);
+    return actor;
   };
 
   return GameUi;
@@ -312,11 +331,27 @@ tjump.createPlatform = function(element) {
     top: element.offsetTop,
     left: element.offsetLeft,
     width: element.offsetWidth,
-    height: element.offsetHeight,
-    htmlId: element.id
+    height: element.offsetHeight
   };
   actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world);
-  body = tjump.ui.bodyFromActor(actor, tjump.world);
+  body = tjump.ui.rectBodyFromActor(actor);
+  return tjump.updatables.push(new ElementActor(element, actor));
+};
+
+tjump.createPlayer = function() {
+  var actor, body, bodyDef, platformDef;
+  platformDef = {
+    top: 200,
+    left: 200,
+    width: 10,
+    height: 20
+  };
+  actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world);
+  actor.setFillStyle('green');
+  actor.setAlpha(.8);
+  bodyDef = tjump.ui.getDefaultBodyDef(actor);
+  bodyDef.bodyType = Box2D.Dynamics.b2Body.b2_dynamicBody;
+  body = tjump.ui.bodyFromActor(actor, bodyDef);
   return tjump.updatables.push(new ElementActor(element, actor));
 };
 
@@ -354,7 +389,7 @@ tjump.update = function() {
 
 
 tjump.init = function() {
-  var allowSleep, b2DebugDraw, listener;
+  var allowSleep, b2DebugDraw, debugDraw, listener;
   tjump.updatables = [];
   b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
   allowSleep = true;
@@ -365,7 +400,16 @@ tjump.init = function() {
   tjump.domParser.parsePage();
   listener = new Box2D.Dynamics.b2ContactListener;
   listener.BeginContact = tjump.beginContact;
-  return tjump.world.SetContactListener(listener);
+  tjump.world.SetContactListener(listener);
+  tjump.createPlayer();
+  setup(debug(draw));
+  debugDraw = new b2DebugDraw();
+  debugDraw.SetSprite(tjump.ctx);
+  debugDraw.SetDrawScale(tjump.SCALE);
+  debugDraw.SetFillAlpha(0.4);
+  debugDraw.SetLineThickness(1.0);
+  debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+  return tjump.world.SetDebugDraw(debugDraw);
 };
 
 tjump.init();
