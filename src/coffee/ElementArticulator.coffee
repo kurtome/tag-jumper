@@ -7,7 +7,7 @@ class ElementArticulator
 			return false
 
 
-		tjump.createPlatform element
+		tj.createPlatform element
 		return true
 
 
@@ -15,10 +15,10 @@ class ElementArticulator
 		if not element.offsetWidth
 			return false
 
-		if element.offsetWidth > tjump.canvas.offsetWidth / 2
+		if element.offsetWidth > tj.canvas.offsetWidth / 2
 			return false
 
-		if element.offsetHeight > tjump.canvas.offsetHeight / 2
+		if element.offsetHeight > tj.canvas.offsetHeight / 2
 			return false
 		
 		if element.offsetWidth < 5

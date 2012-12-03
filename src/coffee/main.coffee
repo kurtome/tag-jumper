@@ -5,20 +5,16 @@
 ###
  Creates a horizontal platform
 ###
-tjump.createPlatform = (element) ->
-	platformDef = {
-		top: element.offsetTop
-		left: element.offsetLeft
-		width: element.offsetWidth
-		height: element.offsetHeight
-	}
+tj.createPlatform = (element) ->
+	elementWrapper = new ElementWrapper(element)
+	platformDef = elementWrapper.getLocation()
 
-	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
-	body = tjump.ui.rectBodyFromActor actor
+	actor = tj.ui.createRectActorWithBody(platformDef, tj.world)
+	body = tj.ui.rectBodyFromActor actor
 
-	tjump.updatables.push new ElementActor(element, actor)
+	tj.updatables.push new ElementActor(elementWrapper, actor, body)
 
-tjump.createPlayer = ->
+tj.createPlayer = ->
 	platformDef = {
 		top: 200
 		left: 200
@@ -26,88 +22,83 @@ tjump.createPlayer = ->
 		height: 20
 	}
 
-	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	actor = tj.ui.createRectActorWithBody(platformDef, tj.world)
 	actor.setFillStyle('green') 
 	actor.setAlpha(.8)
 
-	bodyDef = tjump.ui.getDefaultBodyDef(actor)
+	bodyDef = tj.ui.getDefaultBodyDef(actor)
 	bodyDef.bodyType = Box2D.Dynamics.b2Body.b2_dynamicBody
-	body = tjump.ui.bodyFromActor actor, bodyDef
+	body = tj.ui.bodyFromActor actor, bodyDef
 
-	tjump.updatables.push new ElementActor(element, actor)
+	bodyWrapper = new BodyWrapper(body)
+	bodyActor = new BodyActor(bodyWrapper, actor)
+	tj.updatables.push bodyActor
 
 
 ###
  Handles the BeginContact event from the physics 
  world.
 ###
-tjump.beginContact = (contact) ->
+tj.beginContact = (contact) ->
 	# TODO - collission 'n stuff
-
-
 
 
 ###
  Does all the work we need to do at each tick of the
  game clock.
 ###
-tjump.update = -> 
-	tjump.world.Step( 
-		tjump.FRAME_RATE, 
-		tjump.VELOCITY_ITERATIONS, 
-		tjump.POSITION_ITERATIONS 
+tj.update = -> 
+	tj.world.Step( 
+		tj.FRAME_RATE, 
+		tj.VELOCITY_ITERATIONS, 
+		tj.POSITION_ITERATIONS 
 	)
-	#tjump.world.DrawDebugData()
-	tjump.world.ClearForces()
+	#tj.world.DrawDebugData()
+	tj.world.ClearForces()
 	
-	updatable.update() for updatable in tjump.updatables
+	updatable.update() for updatable in tj.updatables
 
 
 	# Kick off the next loop
-	#requestAnimFrame(tjump.update)
+	#requestAnimFrame(tj.update)
 # update()
-
-
 
 
 ###
  Initalizes everything we need to get started, should
  only be called once to set up.
 ###
-tjump.init = ->
-	tjump.updatables = []
+tj.init = ->
+	tj.updatables = []
 	b2DebugDraw = Box2D.Dynamics.b2DebugDraw
 
 	allowSleep = true
-	tjump.world = new Box2D.Dynamics.b2World(tjump.GRAVITY, allowSleep)
+	tj.world = new Box2D.Dynamics.b2World(tj.GRAVITY, allowSleep)
 
-	tjump.elementArticulator = new ElementArticulator()
-	tjump.domParser = new DomParser(tjump.elementArticulator)
+	tj.elementArticulator = new ElementArticulator()
+	tj.domParser = new DomParser(tj.elementArticulator)
 
-	tjump.ui = new GameUi(tjump.canvas, tjump.world, tjump.update)
-
+	tj.ui = new GameUi(tj.canvas, tj.world, tj.update)
 
 	# Parse the page
-	tjump.domParser.parsePage()
-	
+	tj.domParser.parsePage()
 
 	# Contact listener for collision detection
 	listener = new Box2D.Dynamics.b2ContactListener
-	listener.BeginContact = tjump.beginContact
-	tjump.world.SetContactListener(listener)
+	listener.BeginContact = tj.beginContact
+	tj.world.SetContactListener(listener)
 
-	tjump.createPlayer()
+	tj.createPlayer()
 
-	setup debug draw
+	# setup debug draw
 	debugDraw = new b2DebugDraw()
-	debugDraw.SetSprite(tjump.ctx)
-	debugDraw.SetDrawScale(tjump.SCALE)
+	debugDraw.SetSprite(tj.ctx)
+	debugDraw.SetDrawScale(tj.SCALE)
 	debugDraw.SetFillAlpha(0.4)
 	debugDraw.SetLineThickness(1.0)
 	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
-	tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
 # Set everything up. 
-tjump.init()
+tj.init()
 

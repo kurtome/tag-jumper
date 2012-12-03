@@ -5,13 +5,16 @@ class GameUi
 		@director = new CAAT.Director().initialize(width, height, canvas)
 		@scene = @director.createScene()
 
-		CAAT.PMR = tjump.SCALE
+		CAAT.PMR = tj.SCALE
 		CAAT.enableBox2DDebug(true, @director, @world)
 
 		@scene.onRenderStart = loopCallback
 
+		#@scene.onRenderEnd = =>
+			#@world.DrawDebugData()
+
 		# Begin animating fps
-		CAAT.loop tjump.FRAME_RATE
+		CAAT.loop tj.FRAME_RATE
 
 	getDefaultBodyDef : (actor) ->
 		def = {
@@ -32,6 +35,25 @@ class GameUi
 				userData:               {}
 			}
 		return def
+
+	createPolygon : (x,y,data) ->
+		body =  new CAAT.B2DPolygonBody().enableEvents(false).createBody(
+			world,
+					{
+						x:                      x,
+						y:                      y,
+						bodyType:               Box2D.Dynamics.b2Body.b2_dynamicBody,
+						density:                data.density,
+						restitution:            data.restitution,
+						friction:               data.friction,
+						image:                  null,
+						polygonType:            CAAT.B2DPolygonBody.Type.POLYGON,
+						bodyDef:                data.polygonDef,
+						bodyDefScale:           data.polygonScale,
+						bodyDefScaleTolerance:  data.tolerance,
+						userData:               null
+					}
+		);
 
 
 	bodyFromActor : (actor, bodyDef) => 

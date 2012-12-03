@@ -1,61 +1,80 @@
 # Object to namespace everything
-tjump = { }
+tj = { }
 
 # Put the overlay on
 
-tjump.overlay = document.createElement('div')
-tjump.overlay.id = 'main-overlay'
-tjump.overlay.className += 'overlay'
+tj.overlay = document.createElement('div')
+tj.overlay.id = 'main-overlay'
+tj.overlay.className += 'overlay'
 
-tjump.canvas = document.createElement('canvas')
-tjump.canvas.id = 'main-canvas'
-tjump.canvas.className += 'canvas'
-tjump.overlay.appendChild(tjump.canvas)
+tj.canvas = document.createElement('canvas')
+tj.canvas.id = 'main-canvas'
+tj.canvas.className += 'canvas'
+tj.overlay.appendChild(tj.canvas)
 
-tjump.ctx = tjump.canvas.getContext("2d")
+tj.ctx = tj.canvas.getContext("2d")
 
-tjump.$document = $(document)
+tj.$document = $(document)
 
-document.body.appendChild(tjump.overlay)
+document.body.appendChild(tj.overlay)
 
 # Constants
-tjump.SCALE = 32.0
-tjump.FRAME_RATE = 1.0 / 60
-tjump.VELOCITY_ITERATIONS = 10
-tjump.POSITION_ITERATIONS = 10
-tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(9.8, 5)
+tj.SCALE = 32.0
+tj.FRAME_RATE = 1.0 / 60
+tj.VELOCITY_ITERATIONS = 10
+tj.POSITION_ITERATIONS = 10
+tj.GRAVITY = new Box2D.Common.Math.b2Vec2(0, 10)
 
-tjump.getWidth = ->
-	return tjump.canvas.offsetWidth
 
-tjump.getHeight = ->
-	return tjump.canvas.offsetHeight
+tj.getWidth = ->
+	return tj.canvas.offsetWidth
+
+tj.getHeight = ->
+	return tj.canvas.offsetHeight
 
 ###
  Converts screen points (pixels) to points the 
  physics engine works with
 ###
-tjump.scaleToPhys = (x) -> 
-	return (x / tjump.SCALE)
+tj.scaleToPhys = (x) -> 
+	return (x / tj.SCALE)
 
 ###
  Converts screen points (pixels) vector to points 
  the physics engine works with
 ###
-tjump.scaleVecToPhys = (vec) ->
-	vec.Multiply(1 / tjump.SCALE)
+tj.scaleVecToPhys = (vec) ->
+	vec.Multiply(1 / tj.SCALE)
+	return vec
+
+###
+ Converts physics engine points to UI
+###
+tj.scaleVecFromPhys = (vec) ->
+	vec.Multiply(tj.SCALE)
 	return vec
 
 ###
  Converts physics points to points the screen points
  (pixels)
 ###
-tjump.scaleToScreen = (x) -> return (x * tjump.SCALE)
+tj.scaleToScreen = (x) -> 
+	return (x * tj.SCALE)
+
+
+tj.createB2Vec = (x, y) ->
+	vector = new Box2D.Common.Math.b2Vec2(x, y)
+	return vector
+
+tj.createB2VecScaledToPhys = (x, y) ->
+	vec = tj.createB2Vec x, y
+	scaledVec = tj.scaleVecToPhys vec
+	return scaledVec
 
 ###
 # Applies a horizontal force to a body
 ###
-tjump.applyXForce = (body, xForce) ->
+tj.applyXForce = (body, xForce) ->
 	b2Vec2 = Box2D.Common.Math.b2Vec2
 	centerPoint = body.GetPosition()
 	force = new b2Vec2(xForce, 0)
@@ -64,13 +83,13 @@ tjump.applyXForce = (body, xForce) ->
 ###
 # Applies a vertical force to a body
 ###
-tjump.applyYForce = (body, yForce) ->
+tj.applyYForce = (body, yForce) ->
 	b2Vec2 = Box2D.Common.Math.b2Vec2
 	centerPoint = body.GetPosition()
 	force = new b2Vec2(0, yForce)
 	body.ApplyForce(force, centerPoint)
 
-tjump.isBodyInContact = (contact, body) ->
+tj.isBodyInContact = (contact, body) ->
 	bodyA = contact.GetFixtureA().GetBody()
 	bodyB = contact.GetFixtureB().GetBody()
 

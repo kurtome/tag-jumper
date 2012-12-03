@@ -18,6 +18,9 @@ inOutPairs = [
 	['tag-jumper-main', 
 		[
 			'setup', 
+			'ElementWrapper', 
+			'BodyWrapper', 
+			'BodyActor', 
 			'ElementActor', 
 			'GameUi', 
 			'ElementArticulator', 

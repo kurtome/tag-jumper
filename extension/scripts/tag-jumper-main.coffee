@@ -1,61 +1,80 @@
 # Object to namespace everything
-tjump = { }
+tj = { }
 
 # Put the overlay on
 
-tjump.overlay = document.createElement('div')
-tjump.overlay.id = 'main-overlay'
-tjump.overlay.className += 'overlay'
+tj.overlay = document.createElement('div')
+tj.overlay.id = 'main-overlay'
+tj.overlay.className += 'overlay'
 
-tjump.canvas = document.createElement('canvas')
-tjump.canvas.id = 'main-canvas'
-tjump.canvas.className += 'canvas'
-tjump.overlay.appendChild(tjump.canvas)
+tj.canvas = document.createElement('canvas')
+tj.canvas.id = 'main-canvas'
+tj.canvas.className += 'canvas'
+tj.overlay.appendChild(tj.canvas)
 
-tjump.ctx = tjump.canvas.getContext("2d")
+tj.ctx = tj.canvas.getContext("2d")
 
-tjump.$document = $(document)
+tj.$document = $(document)
 
-document.body.appendChild(tjump.overlay)
+document.body.appendChild(tj.overlay)
 
 # Constants
-tjump.SCALE = 32.0
-tjump.FRAME_RATE = 1.0 / 60
-tjump.VELOCITY_ITERATIONS = 10
-tjump.POSITION_ITERATIONS = 10
-tjump.GRAVITY = new Box2D.Common.Math.b2Vec2(9.8, 5)
+tj.SCALE = 32.0
+tj.FRAME_RATE = 1.0 / 60
+tj.VELOCITY_ITERATIONS = 10
+tj.POSITION_ITERATIONS = 10
+tj.GRAVITY = new Box2D.Common.Math.b2Vec2(0, 10)
 
-tjump.getWidth = ->
-	return tjump.canvas.offsetWidth
 
-tjump.getHeight = ->
-	return tjump.canvas.offsetHeight
+tj.getWidth = ->
+	return tj.canvas.offsetWidth
+
+tj.getHeight = ->
+	return tj.canvas.offsetHeight
 
 ###
  Converts screen points (pixels) to points the 
  physics engine works with
 ###
-tjump.scaleToPhys = (x) -> 
-	return (x / tjump.SCALE)
+tj.scaleToPhys = (x) -> 
+	return (x / tj.SCALE)
 
 ###
  Converts screen points (pixels) vector to points 
  the physics engine works with
 ###
-tjump.scaleVecToPhys = (vec) ->
-	vec.Multiply(1 / tjump.SCALE)
+tj.scaleVecToPhys = (vec) ->
+	vec.Multiply(1 / tj.SCALE)
+	return vec
+
+###
+ Converts physics engine points to UI
+###
+tj.scaleVecFromPhys = (vec) ->
+	vec.Multiply(tj.SCALE)
 	return vec
 
 ###
  Converts physics points to points the screen points
  (pixels)
 ###
-tjump.scaleToScreen = (x) -> return (x * tjump.SCALE)
+tj.scaleToScreen = (x) -> 
+	return (x * tj.SCALE)
+
+
+tj.createB2Vec = (x, y) ->
+	vector = new Box2D.Common.Math.b2Vec2(x, y)
+	return vector
+
+tj.createB2VecScaledToPhys = (x, y) ->
+	vec = tj.createB2Vec x, y
+	scaledVec = tj.scaleVecToPhys vec
+	return scaledVec
 
 ###
 # Applies a horizontal force to a body
 ###
-tjump.applyXForce = (body, xForce) ->
+tj.applyXForce = (body, xForce) ->
 	b2Vec2 = Box2D.Common.Math.b2Vec2
 	centerPoint = body.GetPosition()
 	force = new b2Vec2(xForce, 0)
@@ -64,13 +83,13 @@ tjump.applyXForce = (body, xForce) ->
 ###
 # Applies a vertical force to a body
 ###
-tjump.applyYForce = (body, yForce) ->
+tj.applyYForce = (body, yForce) ->
 	b2Vec2 = Box2D.Common.Math.b2Vec2
 	centerPoint = body.GetPosition()
 	force = new b2Vec2(0, yForce)
 	body.ApplyForce(force, centerPoint)
 
-tjump.isBodyInContact = (contact, body) ->
+tj.isBodyInContact = (contact, body) ->
 	bodyA = contact.GetFixtureA().GetBody()
 	bodyB = contact.GetFixtureB().GetBody()
 
@@ -80,27 +99,54 @@ tjump.isBodyInContact = (contact, body) ->
 		return false
 
 
-class ElementActor
-	constructor: (@element, @actor) ->
+class ElementWrapper
+	constructor: (@element) ->
 		@$element = $(element)
 
 	getLocation: =>
 		def = {
-			top: @$element.offset().top - tjump.$document.scrollTop()
-			left: @$element.offset().left - tjump.$document.scrollLeft()
+			top: @$element.offset().top - tj.$document.scrollTop(),
+			left: @$element.offset().left - tj.$document.scrollLeft(),
+			height: @$element.height(),
+			width: @$element.width()
 		}
 		return def
 
 	isVisible: =>
 		return @$element.is(":visible")
 
+
+class BodyWrapper
+	constructor: (@body) ->
+
+	getUiPosition: =>
+		worldPosition = @body.worldBody.GetPosition()
+		scaledPos = tj.scaleVecFromPhys(worldPosition) 
+		position = {
+			x: scaledPos.x - tj.$document.scrollLeft()
+			y: scaledPos.y - tj.$document.scrollTop()
+		}
+		return position
+		#boundingBox = @body.boundingBox
+		#return boundingBox[0]
+
+
+
+
+class BodyActor
+	constructor: (@bodyWrapper, @actor) ->
+
 	update: =>
-		if this.isVisible()
-			def = this.getLocation()
-			@actor.setVisible(true)
-			@actor.setLocation(def.left, def.top)
-		else
-			@actor.setVisible(false)
+		position = @bodyWrapper.getUiPosition()
+		@actor.setLocation(position.x, position.y)
+
+
+class ElementActor
+	constructor: (@elementWrapper, @actor, @body) ->
+
+	update: =>
+		def = @elementWrapper.getLocation()
+		@actor.setLocation(def.left, def.top)
 
 
 
@@ -111,13 +157,16 @@ class GameUi
 		@director = new CAAT.Director().initialize(width, height, canvas)
 		@scene = @director.createScene()
 
-		CAAT.PMR = tjump.SCALE
+		CAAT.PMR = tj.SCALE
 		CAAT.enableBox2DDebug(true, @director, @world)
 
 		@scene.onRenderStart = loopCallback
 
+		#@scene.onRenderEnd = =>
+			#@world.DrawDebugData()
+
 		# Begin animating fps
-		CAAT.loop tjump.FRAME_RATE
+		CAAT.loop tj.FRAME_RATE
 
 	getDefaultBodyDef : (actor) ->
 		def = {
@@ -138,6 +187,25 @@ class GameUi
 				userData:               {}
 			}
 		return def
+
+	createPolygon : (x,y,data) ->
+		body =  new CAAT.B2DPolygonBody().enableEvents(false).createBody(
+			world,
+					{
+						x:                      x,
+						y:                      y,
+						bodyType:               Box2D.Dynamics.b2Body.b2_dynamicBody,
+						density:                data.density,
+						restitution:            data.restitution,
+						friction:               data.friction,
+						image:                  null,
+						polygonType:            CAAT.B2DPolygonBody.Type.POLYGON,
+						bodyDef:                data.polygonDef,
+						bodyDefScale:           data.polygonScale,
+						bodyDefScaleTolerance:  data.tolerance,
+						userData:               null
+					}
+		);
 
 
 	bodyFromActor : (actor, bodyDef) => 
@@ -185,7 +253,7 @@ class ElementArticulator
 			return false
 
 
-		tjump.createPlatform element
+		tj.createPlatform element
 		return true
 
 
@@ -193,10 +261,10 @@ class ElementArticulator
 		if not element.offsetWidth
 			return false
 
-		if element.offsetWidth > tjump.canvas.offsetWidth / 2
+		if element.offsetWidth > tj.canvas.offsetWidth / 2
 			return false
 
-		if element.offsetHeight > tjump.canvas.offsetHeight / 2
+		if element.offsetHeight > tj.canvas.offsetHeight / 2
 			return false
 		
 		if element.offsetWidth < 5
@@ -252,20 +320,16 @@ class DomParser
 ###
  Creates a horizontal platform
 ###
-tjump.createPlatform = (element) ->
-	platformDef = {
-		top: element.offsetTop
-		left: element.offsetLeft
-		width: element.offsetWidth
-		height: element.offsetHeight
-	}
+tj.createPlatform = (element) ->
+	elementWrapper = new ElementWrapper(element)
+	platformDef = elementWrapper.getLocation()
 
-	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
-	body = tjump.ui.rectBodyFromActor actor
+	actor = tj.ui.createRectActorWithBody(platformDef, tj.world)
+	body = tj.ui.rectBodyFromActor actor
 
-	tjump.updatables.push new ElementActor(element, actor)
+	tj.updatables.push new ElementActor(elementWrapper, actor, body)
 
-tjump.createPlayer = ->
+tj.createPlayer = ->
 	platformDef = {
 		top: 200
 		left: 200
@@ -273,88 +337,83 @@ tjump.createPlayer = ->
 		height: 20
 	}
 
-	actor = tjump.ui.createRectActorWithBody(platformDef, tjump.world)
+	actor = tj.ui.createRectActorWithBody(platformDef, tj.world)
 	actor.setFillStyle('green') 
 	actor.setAlpha(.8)
 
-	bodyDef = tjump.ui.getDefaultBodyDef(actor)
+	bodyDef = tj.ui.getDefaultBodyDef(actor)
 	bodyDef.bodyType = Box2D.Dynamics.b2Body.b2_dynamicBody
-	body = tjump.ui.bodyFromActor actor, bodyDef
+	body = tj.ui.bodyFromActor actor, bodyDef
 
-	tjump.updatables.push new ElementActor(element, actor)
+	bodyWrapper = new BodyWrapper(body)
+	bodyActor = new BodyActor(bodyWrapper, actor)
+	tj.updatables.push bodyActor
 
 
 ###
  Handles the BeginContact event from the physics 
  world.
 ###
-tjump.beginContact = (contact) ->
+tj.beginContact = (contact) ->
 	# TODO - collission 'n stuff
-
-
 
 
 ###
  Does all the work we need to do at each tick of the
  game clock.
 ###
-tjump.update = -> 
-	tjump.world.Step( 
-		tjump.FRAME_RATE, 
-		tjump.VELOCITY_ITERATIONS, 
-		tjump.POSITION_ITERATIONS 
+tj.update = -> 
+	tj.world.Step( 
+		tj.FRAME_RATE, 
+		tj.VELOCITY_ITERATIONS, 
+		tj.POSITION_ITERATIONS 
 	)
-	#tjump.world.DrawDebugData()
-	tjump.world.ClearForces()
+	#tj.world.DrawDebugData()
+	tj.world.ClearForces()
 	
-	updatable.update() for updatable in tjump.updatables
+	updatable.update() for updatable in tj.updatables
 
 
 	# Kick off the next loop
-	#requestAnimFrame(tjump.update)
+	#requestAnimFrame(tj.update)
 # update()
-
-
 
 
 ###
  Initalizes everything we need to get started, should
  only be called once to set up.
 ###
-tjump.init = ->
-	tjump.updatables = []
+tj.init = ->
+	tj.updatables = []
 	b2DebugDraw = Box2D.Dynamics.b2DebugDraw
 
 	allowSleep = true
-	tjump.world = new Box2D.Dynamics.b2World(tjump.GRAVITY, allowSleep)
+	tj.world = new Box2D.Dynamics.b2World(tj.GRAVITY, allowSleep)
 
-	tjump.elementArticulator = new ElementArticulator()
-	tjump.domParser = new DomParser(tjump.elementArticulator)
+	tj.elementArticulator = new ElementArticulator()
+	tj.domParser = new DomParser(tj.elementArticulator)
 
-	tjump.ui = new GameUi(tjump.canvas, tjump.world, tjump.update)
-
+	tj.ui = new GameUi(tj.canvas, tj.world, tj.update)
 
 	# Parse the page
-	tjump.domParser.parsePage()
-	
+	tj.domParser.parsePage()
 
 	# Contact listener for collision detection
 	listener = new Box2D.Dynamics.b2ContactListener
-	listener.BeginContact = tjump.beginContact
-	tjump.world.SetContactListener(listener)
+	listener.BeginContact = tj.beginContact
+	tj.world.SetContactListener(listener)
 
-	tjump.createPlayer()
+	tj.createPlayer()
 
-	setup debug draw
+	# setup debug draw
 	debugDraw = new b2DebugDraw()
-	debugDraw.SetSprite(tjump.ctx)
-	debugDraw.SetDrawScale(tjump.SCALE)
+	debugDraw.SetSprite(tj.ctx)
+	debugDraw.SetDrawScale(tj.SCALE)
 	debugDraw.SetFillAlpha(0.4)
 	debugDraw.SetLineThickness(1.0)
 	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
-	tjump.world.SetDebugDraw(debugDraw)
 # ~init() 
 
 # Set everything up. 
-tjump.init()
+tj.init()
 
