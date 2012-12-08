@@ -116,6 +116,44 @@ class ElementWrapper
 		return @$element.is(":visible")
 
 
+class InputHandler
+	keysDown: {}
+
+	# Listen for keys being presses and being released. As this happens
+	# add and remove them from the key store.
+	constructor: (@player) ->
+		$("body").keydown (e) => @keysDown[e.keyCode] = true
+		$("body").keyup (e)   => delete @keysDown[e.keyCode]
+
+	# Every time update is called from the game loop act on the currently
+	# pressed keys by passing the events on to the world.
+	update: () ->
+		@player.up()    if 38 of @keysDown
+		@player.down()  if 40 of @keysDown
+		@player.left()  if 37 of @keysDown
+		@player.right() if 39 of @keysDown
+
+
+
+class Player
+	constructor: (@bodyActor) ->
+
+	up: =>
+		vec = tj.createB2Vec(0, -2)
+		@bodyActor.applyImpulse(vec)
+
+	down: =>
+
+	left: =>
+		vec = tj.createB2Vec(1, 0)
+		@bodyActor.applyImpulse(vec)
+
+	right: =>
+		vec = tj.createB2Vec(-1, 0)
+		@bodyActor.applyImpulse(vec)
+
+
+
 class BodyWrapper
 	constructor: (@body) ->
 
@@ -127,8 +165,11 @@ class BodyWrapper
 			y: scaledPos.y - tj.$document.scrollTop()
 		}
 		return position
-		#boundingBox = @body.boundingBox
-		#return boundingBox[0]
+
+	applyImpulse: (b2Vec) =>
+		worldPosition = @body.worldBody.GetPosition()
+		@body.worldBody.ApplyImpulse(b2Vec, worldPosition)
+
 
 
 
@@ -139,6 +180,9 @@ class BodyActor
 	update: =>
 		position = @bodyWrapper.getUiPosition()
 		@actor.setLocation(position.x, position.y)
+
+	applyImpulse: (b2Vec) =>
+		@bodyWrapper.applyImpulse(b2Vec)
 
 
 class ElementActor
@@ -349,6 +393,8 @@ tj.createPlayer = ->
 	bodyActor = new BodyActor(bodyWrapper, actor)
 	tj.updatables.push bodyActor
 
+	player = new Player(bodyActor)
+
 
 ###
  Handles the BeginContact event from the physics 
@@ -363,6 +409,8 @@ tj.beginContact = (contact) ->
  game clock.
 ###
 tj.update = -> 
+	if not tj.initComplete then return
+
 	tj.world.Step( 
 		tj.FRAME_RATE, 
 		tj.VELOCITY_ITERATIONS, 
@@ -372,6 +420,8 @@ tj.update = ->
 	tj.world.ClearForces()
 	
 	updatable.update() for updatable in tj.updatables
+
+	tj.inputHandler.update()
 
 
 	# Kick off the next loop
@@ -403,7 +453,10 @@ tj.init = ->
 	listener.BeginContact = tj.beginContact
 	tj.world.SetContactListener(listener)
 
-	tj.createPlayer()
+	player = tj.createPlayer()
+
+	# Input handler
+	tj.inputHandler = new InputHandler(player)
 
 	# setup debug draw
 	debugDraw = new b2DebugDraw()
@@ -412,6 +465,8 @@ tj.init = ->
 	debugDraw.SetFillAlpha(0.4)
 	debugDraw.SetLineThickness(1.0)
 	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
+
+	tj.initComplete = true
 # ~init() 
 
 # Set everything up. 

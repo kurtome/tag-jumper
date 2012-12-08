@@ -34,6 +34,8 @@ tj.createPlayer = ->
 	bodyActor = new BodyActor(bodyWrapper, actor)
 	tj.updatables.push bodyActor
 
+	player = new Player(bodyActor)
+
 
 ###
  Handles the BeginContact event from the physics 
@@ -48,6 +50,8 @@ tj.beginContact = (contact) ->
  game clock.
 ###
 tj.update = -> 
+	if not tj.initComplete then return
+
 	tj.world.Step( 
 		tj.FRAME_RATE, 
 		tj.VELOCITY_ITERATIONS, 
@@ -57,6 +61,8 @@ tj.update = ->
 	tj.world.ClearForces()
 	
 	updatable.update() for updatable in tj.updatables
+
+	tj.inputHandler.update()
 
 
 	# Kick off the next loop
@@ -88,7 +94,10 @@ tj.init = ->
 	listener.BeginContact = tj.beginContact
 	tj.world.SetContactListener(listener)
 
-	tj.createPlayer()
+	player = tj.createPlayer()
+
+	# Input handler
+	tj.inputHandler = new InputHandler(player)
 
 	# setup debug draw
 	debugDraw = new b2DebugDraw()
@@ -97,6 +106,8 @@ tj.init = ->
 	debugDraw.SetFillAlpha(0.4)
 	debugDraw.SetLineThickness(1.0)
 	debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit)
+
+	tj.initComplete = true
 # ~init() 
 
 # Set everything up. 

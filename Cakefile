@@ -19,6 +19,8 @@ inOutPairs = [
 		[
 			'setup', 
 			'ElementWrapper', 
+			'InputHandler', 
+			'Player', 
 			'BodyWrapper', 
 			'BodyActor', 
 			'ElementActor', 

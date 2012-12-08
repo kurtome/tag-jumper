@@ -9,7 +9,10 @@ class BodyWrapper
 			y: scaledPos.y - tj.$document.scrollTop()
 		}
 		return position
-		#boundingBox = @body.boundingBox
-		#return boundingBox[0]
+
+	applyImpulse: (b2Vec) =>
+		worldPosition = @body.worldBody.GetPosition()
+		@body.worldBody.ApplyImpulse(b2Vec, worldPosition)
+
 
 
